@@ -83,6 +83,8 @@ if ( FLECSALE_RUNTIME_MODEL STREQUAL "mpi" )
   set( FLECSALE_UNIT_POLICY MPI )
 elseif ( FLECSALE_RUNTIME_MODEL STREQUAL "legion" )
   set( FLECSALE_UNIT_POLICY LEGION )
+elseif ( FLECSALE_RUNTIME_MODEL STREQUAL "hpx" )
+  set( FLECSALE_UNIT_POLICY HPX )
 else()
   MESSAGE( FATAL_ERROR 
     "Unknown FLECSI_SP_RUNTIME_MODEL being used: ${FLECSI_SP_RUNTIME_MODEL}" )
@@ -353,7 +355,7 @@ if(FLECSALE_ENABLE_PORTAGE)
 endif()
 
 #------------------------------------------------------------------------------#
-# Legion / MPI
+# Legion / MPI / HPX
 #------------------------------------------------------------------------------#
 
 find_package(Legion)
@@ -367,6 +369,23 @@ find_package(MPI)
 if (MPI_FOUND) 
   include_directories(${MPI_C_INCLUDE_PATH})
 endif()
+
+find_package(HPX)
+
+if (HPX_FOUND) 
+  # extract the HPX include directories
+  set(HPX_INCLUDE_DIRS)
+  get_target_property(HPX_INTERFACE_LIBS HPX::hpx INTERFACE_LINK_LIBRARIES)
+  foreach(target ${HPX_INTERFACE_LIBS})
+    get_target_property(HPX_TARGET_INCLUDE_DIRS ${target} INTERFACE_INCLUDE_DIRECTORIES)
+    if(HPX_TARGET_INCLUDE_DIRS)
+      set(HPX_INCLUDE_DIRS ${HPX_INCLUDE_DIRS} ${HPX_TARGET_INCLUDE_DIRS})
+    endif()
+  endforeach()
+  list(REMOVE_DUPLICATES HPX_INCLUDE_DIRS)
+  include_directories(${HPX_INCLUDE_DIRS})
+endif()
+
 
 #------------------------------------------------------------------------------#
 # now load the extra functionality
